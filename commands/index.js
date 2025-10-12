@@ -1,0 +1,38 @@
+const sellAllCommand = require('./sellAll');
+const lootboxCommand = require('./lootbox');
+const inventoryCommand = require('./inventory');
+const slotsCommand = require('./slots');
+
+const commandMap = {
+  '!sellall': sellAllCommand,
+  '!lootbox': lootboxCommand,
+  '!inventory': inventoryCommand,
+  '!slots': slotsCommand
+};
+
+function sanitizeCommand(input) {
+  return input
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\u034F\u061C\u180E\uFEFF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+async function handleCommand(client, channel, tags, message) {
+  const splitMessage = sanitizeCommand(message).split(' ');
+  const command = splitMessage[0];
+
+  const extraParams = splitMessage.slice(1).map((value, index) => ({
+    [`param${index}`]: value
+  }));
+
+  const handler = commandMap[command];
+  if (handler) {
+    console.log(`[${command}] Request received from ${tags.username}`);
+    await handler.execute(client, channel, tags, extraParams);
+  }
+}
+
+
+module.exports = { handleCommand };
