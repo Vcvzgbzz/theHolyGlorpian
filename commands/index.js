@@ -1,14 +1,16 @@
-const sellAllCommand = require('./sellAll');
-const lootboxCommand = require('./lootbox');
-const inventoryCommand = require('./inventory');
-const slotsCommand = require('./slots');
+const sellAllCommand = require('./sellAll')
+const lootboxCommand = require('./lootbox')
+const inventoryCommand = require('./inventory')
+const slotsCommand = require('./slots')
+const helpCommand = require('./helpItems')
 
 const commandMap = {
   '!sellall': sellAllCommand,
   '!lootbox': lootboxCommand,
   '!inventory': inventoryCommand,
-  '!slots': slotsCommand
-};
+  '!slots': slotsCommand,
+  '!help': helpCommand,
+}
 
 function sanitizeCommand(input) {
   return input
@@ -16,23 +18,26 @@ function sanitizeCommand(input) {
     .replace(/[\u200B-\u200D\u034F\u061C\u180E\uFEFF]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-    .toLowerCase();
+    .toLowerCase()
 }
 
 async function handleCommand(client, channel, tags, message) {
-  const splitMessage = sanitizeCommand(message).split(' ');
-  const command = splitMessage[0];
+  try {
+    const splitMessage = sanitizeCommand(message).split(' ')
+    const command = splitMessage[0]
 
-  const extraParams = splitMessage.slice(1).map((value, index) => ({
-    [`param${index}`]: value
-  }));
+    const extraParams = splitMessage.slice(1).map((value, index) => ({
+      [`param${index}`]: value,
+    }))
 
-  const handler = commandMap[command];
-  if (handler) {
-    console.log(`[${command}] Request received from ${tags.username}`);
-    await handler.execute(client, channel, tags, extraParams);
+    const handler = commandMap[command]
+    if (handler) {
+      console.log(`[${command}] Request received from ${tags.username}`)
+      await handler.execute(client, channel, tags, extraParams)
+    }
+  } catch (err) {
+    console.log(err)
   }
 }
 
-
-module.exports = { handleCommand };
+module.exports = { handleCommand }
