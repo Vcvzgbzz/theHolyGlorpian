@@ -1,6 +1,6 @@
 {
   "name": "theholyglorpian",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -17,5 +17,5 @@
   },
   "devDependencies": {
     "prettier": "^3.6.2"
-  }
+}
 }

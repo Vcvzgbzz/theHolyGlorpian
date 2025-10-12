@@ -33,8 +33,7 @@ Return a JSON response like:
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt },
-      ],
-      response_format: 'json',
+      ]
     })
 
     const parsed = completion.choices[0].message.content
