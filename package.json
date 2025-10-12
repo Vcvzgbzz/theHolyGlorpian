@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "openai": "^6.3.0",
     "tmi.js": "^1.8.5"
   },
   "devDependencies": {
