@@ -1,5 +1,5 @@
 const { OpenAI } = require('openai')
-const { getFeeling, updateFeeling } = require('./feelings')
+const { getFeeling, updateFeeling } = require('../utils/userFeelings')
 require('dotenv').config()
 
 const openai = new OpenAI({
@@ -44,11 +44,13 @@ Return a JSON response like:
     const delta = typeof parsed.delta === 'number' ? parsed.delta : 0
     const newFeeling = updateFeeling(user, delta)
 
-    return {
+    const responseObj = {
       reply: parsed.reply,
       delta,
       feeling: newFeeling,
     }
+    console.log(responseObj)
+    return responseObj
   } catch (err) {
     console.error('❌ GPT error:', err.message || err)
     throw new Error('GPT_ERROR')
