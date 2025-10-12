@@ -29,7 +29,7 @@ Return a JSON response like:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-5o-nano',
+      model: 'gpt-5-nano',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt },
