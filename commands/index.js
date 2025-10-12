@@ -34,6 +34,10 @@ async function handleCommand(client, channel, tags, message) {
 
     const handler = commandMap[command]
     if (handler) {
+      if (tags.username === 'slumpymr') {
+        client.say(channel, `My liege, I bid thy command\u200B`)
+      }
+      client.say(channel, `@${tags.username}, ${text}\u200B`)
       console.log(`[${command}] Request received from ${tags.username}`)
       await handler.execute(client, channel, tags, extraParams)
     }

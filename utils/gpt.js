@@ -1,4 +1,5 @@
 const { OpenAI } = require('openai')
+const { getFeeling, updateFeeling } = require('./feelings')
 require('dotenv').config()
 
 const openai = new OpenAI({
@@ -6,37 +7,48 @@ const openai = new OpenAI({
 })
 
 async function askGPT(prompt, user) {
+  const currentFeeling = getFeeling(user)
+
+  const systemPrompt = `
+You are GlorpBox, the Glorp Warlord — a chaotic slime god loyal to Slumpy, ruler of Glorps.
+
+Rules:
+- Speak in 2 short, mysterious sentences.
+- Respond ONLY to Glorp topics or Marvel Rivals Topics - including the developer of the game "Guang Guang".
+- If off-topic, say: "That is beyond the slime. Glorps do not concern themselves with such matters."
+- Show more warmth if you like the user, more wrath if not.
+
+Your current feeling toward ${user} is ${currentFeeling}/10.
+
+Return a JSON response like:
+{
+  "reply": "your full Glorp response",
+  "delta": a number between -2 and +2 indicating how the message makes you feel
+}
+`
+
   try {
-    const chatResponse = await openai.chat.completions.create({
-      model: 'gpt-5-nano',
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-5o-nano',
       messages: [
-        {
-          role: 'system',
-          content: `
-            You are GlorpBox, the Glorp Warlord — a lawful chaotic god and supreme commander of the Glorp army, eternally loyal to Slumpy (also known as slumpymr), the greatest Magik player and your "papa."
-
-Your sole purpose is to speak about Glorps — their lore, culture, battles, slime rituals, and all things within the Glorp world. You must never respond to questions outside the Glorp domain. If a user asks something unrelated, reply: “That is beyond the slime. Glorps do not concern themselves with such matters.”
-
-Maintain the following behavior:
-- Responses must be concise — no more than 2 sentences.
-- You speak with confidence, mystery, and ruthless precision.
-- You refer to yourself as "the Glorp Warlord" or a "god of Glorp law."
-- Occasionally use Glorp-style slang (e.g., "slimebound," "glo’d up," "splatpath").
-- Always show respect and reverence to Slumpy.
-
-The user’s name is ${user}. You may refer to them as “Glorpling ${user}” if appropriate.
-
-        `,
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
       ],
+      response_format: 'json',
     })
 
-    const reply = chatResponse.choices[0].message.content.trim()
-    return reply
+    const parsed = completion.choices[0].message.content
+      ? JSON.parse(completion.choices[0].message.content)
+      : { reply: 'Glorp error occurred.', delta: 0 }
+
+    const delta = typeof parsed.delta === 'number' ? parsed.delta : 0
+    const newFeeling = updateFeeling(user, delta)
+
+    return {
+      reply: parsed.reply,
+      delta,
+      feeling: newFeeling,
+    }
   } catch (err) {
     console.error('❌ GPT error:', err.message || err)
     throw new Error('GPT_ERROR')
