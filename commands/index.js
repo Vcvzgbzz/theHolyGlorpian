@@ -11,7 +11,7 @@ const commandMap = {
   '!inventory': inventoryCommand,
   '!slots': slotsCommand,
   '!help': helpCommand,
-  '!glorpbox': askCommand
+  '!glorpbox': askCommand,
 }
 
 function sanitizeCommand(input) {

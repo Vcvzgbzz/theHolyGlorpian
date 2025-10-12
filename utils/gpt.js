@@ -1,9 +1,9 @@
-const { OpenAI } = require('openai');
-require('dotenv').config();
+const { OpenAI } = require('openai')
+require('dotenv').config()
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 async function askGPT(prompt, user) {
   try {
@@ -12,7 +12,7 @@ async function askGPT(prompt, user) {
       messages: [
         {
           role: 'system',
-         content: `
+          content: `
             You are GlorpBox — the leader of the glorp army which is under the control of slumpy. 
             Your only purpose is to talk about Glorps, their lore, and anything directly related to the Glorp world. 
             Do not respond to questions or topics outside Glorps. If a user asks about something unrelated, say that Glorps do not concern themselves with that matter.
@@ -27,22 +27,21 @@ async function askGPT(prompt, user) {
 
             User context:
             The user’s name is ${user}.
-        `
-
+        `,
         },
         {
           role: 'user',
-          content: prompt
-        }
-      ]
-    });
+          content: prompt,
+        },
+      ],
+    })
 
-    const reply = chatResponse.choices[0].message.content.trim();
-    return reply;
+    const reply = chatResponse.choices[0].message.content.trim()
+    return reply
   } catch (err) {
-    console.error('❌ GPT error:', err.message || err);
-    throw new Error('GPT_ERROR');
+    console.error('❌ GPT error:', err.message || err)
+    throw new Error('GPT_ERROR')
   }
 }
 
-module.exports = { askGPT };
+module.exports = { askGPT }
