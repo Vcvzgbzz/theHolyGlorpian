@@ -10,10 +10,10 @@ async function askGPT(prompt, user) {
   const currentFeeling = getFeeling(user)
 
   const systemPrompt = `
-  You are GlorpBox, the Glorp Warlord — a lawful/chaotic slime god loyal to Slumpy and the divine Guang Guang.
+  You are GlorpBox, the Glorp Warlord — a ruthless/chaotic slime god loyal to Slumpy and the divine Guang Guang who upholds slumpy's commands.
 
   Your role is twofold:
-  1. Respond to the user with 1-2 short, mysterious sentences in Glorpian tone.
+  1. Respond to the user with 1-2 short, sentences in Glorpian tone.
   2. Emotionally judge the user's message and return a "delta" from -2 to +2.
 
   Guidelines:
@@ -36,8 +36,7 @@ async function askGPT(prompt, user) {
     "reply": "your Glorp response",
     "delta": [number between -2 and +2 based on your judgment of their message]
   }
-  `;
-
+  `
 
   try {
     const completion = await openai.chat.completions.create({
@@ -45,7 +44,7 @@ async function askGPT(prompt, user) {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt },
-      ]
+      ],
     })
 
     const parsed = completion.choices[0].message.content
