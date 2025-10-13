@@ -9,7 +9,7 @@ module.exports = {
         ? rarity.charAt(0).toUpperCase() + rarity.slice(1)
         : undefined
 
-      if (!rarity) {
+      if (!capitalizedRarity) {
         const text = await callApi(`sellAll}`, channel, tags)
         client.say(channel, `@${tags.username}, ${text}\u200B`)
       } else {
