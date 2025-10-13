@@ -62,7 +62,7 @@ async function askGPT(prompt, user) {
       delta,
       feeling: newFeeling,
       emotion: parsed?.emotion,
-      reason: parsed?.reason
+      reason: parsed?.reason,
     }
     console.log(responseObj)
     return responseObj

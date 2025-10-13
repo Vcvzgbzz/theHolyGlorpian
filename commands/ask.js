@@ -17,10 +17,7 @@ module.exports = {
 
       const deltaEmoji = delta > 0 ? '💚' : delta < 0 ? '💢' : '⚪'
 
-      client.say(
-        channel,
-        `@${tags.username}, ${reply}\u200B`
-      )
+      client.say(channel, `@${tags.username}, ${reply}\u200B`)
     } catch (err) {
       const code = err.message || 'UNKNOWN'
       const errorMessage = getErrorMessage(code, tags.username)
