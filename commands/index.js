@@ -4,6 +4,7 @@ const inventoryCommand = require('./inventory')
 const slotsCommand = require('./slots')
 const helpCommand = require('./helpItems')
 const askCommand = require('./ask')
+const buylootbox = require('./rarityLootbox')
 
 const commandMap = {
   '!sellall': sellAllCommand,
@@ -12,6 +13,7 @@ const commandMap = {
   '!slots': slotsCommand,
   '!help': helpCommand,
   '!glorpbox': askCommand,
+  '!buylootbox': buylootbox
 }
 
 function sanitizeCommand(input) {
