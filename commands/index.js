@@ -5,6 +5,7 @@ const slotsCommand = require('./slots')
 const helpCommand = require('./helpItems')
 const askCommand = require('./ask')
 const buylootbox = require('./rarityLootbox')
+const checkBalance = require('./balance')
 
 const commandMap = {
   '!sellall': sellAllCommand,
@@ -13,7 +14,8 @@ const commandMap = {
   '!slots': slotsCommand,
   '!help': helpCommand,
   '!glorpbox': askCommand,
-  '!buylootbox': buylootbox
+  '!buylootbox': buylootbox,
+  '!balance': checkBalance,
 }
 
 function sanitizeCommand(input) {
@@ -39,7 +41,10 @@ async function handleCommand(client, channel, tags, message) {
       if (tags.username === 'slumpymr') {
         client.say(channel, `My liege, I bid thy command\u200B`)
       }
-      console.log(`[${command}] Request received from ${tags.username}`,{params:extraParams,message:message})
+      console.log(`[${command}] Request received from ${tags.username}`, {
+        params: extraParams,
+        message: message,
+      })
       await handler.execute(client, channel, tags, extraParams)
     }
   } catch (err) {
