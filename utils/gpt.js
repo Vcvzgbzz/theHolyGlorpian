@@ -1,5 +1,6 @@
 const { OpenAI } = require('openai')
 const { getFeeling, updateFeeling } = require('../utils/userFeelings')
+const { askOpenWebUI } = require('./openwebui')
 require('dotenv').config()
 
 const openai = new OpenAI({
@@ -74,7 +75,74 @@ async function askGPT(prompt, user) {
   }
   `
 
+  // First, try local OpenWebUI (if configured). If it fails, fall back to OpenAI.
   try {
+    if (process.env.OPENWEBUI_URL) {
+      try {
+        const raw = await askOpenWebUI(systemPrompt + '\n\n' + prompt)
+        let parsed
+        if (typeof raw === 'string') {
+          // Try direct JSON.parse
+          try {
+            parsed = JSON.parse(raw)
+          } catch (e1) {
+            // Common fixes: remove code fences, replace ": +1" with ": 1", trim
+            let cleaned = raw.trim()
+            // strip triple backticks and optional language tag
+            cleaned = cleaned.replace(/^```\w*\n?/, '').replace(/```$/, '').trim()
+            // replace '+number' occurrences like ": +1" -> ": 1"
+            cleaned = cleaned.replace(/:\s*\+([0-9]+)/g, ': $1')
+            try {
+              parsed = JSON.parse(cleaned)
+            } catch (e2) {
+              // If still failing, leave parsed as raw string
+              parsed = { reply: String(raw), delta: 0 }
+            }
+          }
+        } else {
+          parsed = raw
+        }
+
+        // If parsed.reply is itself a JSON string, try to parse it too (some models double-stringify)
+        if (parsed && typeof parsed.reply === 'string') {
+          const s = parsed.reply.trim()
+          if ((s.startsWith('{') && s.endsWith('}')) || (s.startsWith('[') && s.endsWith(']'))) {
+            try {
+              const inner = JSON.parse(s.replace(/:\s*\+([0-9]+)/g, ': $1'))
+              // prefer inner fields if present
+              if (inner.reply) parsed.reply = inner.reply
+              if (typeof inner.delta === 'number') parsed.delta = inner.delta
+              if (inner.emotion) parsed.emotion = inner.emotion
+              if (inner.reason) parsed.reason = inner.reason
+            } catch (e) {
+              // ignore parse error
+            }
+          }
+        }
+
+        const delta = typeof parsed.delta === 'number' ? parsed.delta : 0
+        const newFeeling = updateFeeling(user, delta)
+
+        const responseObj = {
+          reply: parsed.reply,
+          delta,
+          feeling: newFeeling,
+          emotion: parsed?.emotion,
+          reason: parsed?.reason,
+        }
+        console.log('OpenWebUI response:', responseObj)
+        return responseObj
+      } catch (e) {
+        console.warn('OpenWebUI attempt failed:', e.message || e)
+        if (String(process.env.USE_OPENWEBUI_ONLY).toLowerCase() === 'true') {
+          console.error('USE_OPENWEBUI_ONLY=true — not falling back to OpenAI')
+          throw new Error('OPENWEBUI_ONLY_FAILED')
+        }
+        console.warn('Falling back to OpenAI')
+      }
+    }
+
+    // Fallback to OpenAI
     const completion = await openai.chat.completions.create({
       model: 'gpt-5-nano',
       messages: [
@@ -91,13 +159,14 @@ async function askGPT(prompt, user) {
     const newFeeling = updateFeeling(user, delta)
 
     const responseObj = {
-      reply: parsed.reply,
+      // mark that this reply came from fallback
+      reply: 'fallback AI ' + parsed.reply,
       delta,
       feeling: newFeeling,
       emotion: parsed?.emotion,
       reason: parsed?.reason,
     }
-    console.log(responseObj)
+    console.log('OpenAI fallback response:', responseObj)
     return responseObj
   } catch (err) {
     console.error('❌ GPT error:', err.message || err)
