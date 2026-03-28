@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config({ quiet: true })
 const tmi = require('tmi.js')
 const { handleCommand } = require('./commands')
 

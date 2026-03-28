@@ -4,8 +4,15 @@ const inventoryCommand = require('./inventory')
 const slotsCommand = require('./slots')
 const helpCommand = require('./helpItems')
 const askCommand = require('./ask')
+const askSafetyTestCommand = require('./askSafetyTest')
+const glorpPipelineTestCommand = require('./glorpPipelineTest')
+const glorpPromptTestCommand = require('./glorpPromptTest')
+const glorpCoreIdentityTestCommand = require('./glorpCoreIdentityTest')
+const statsCommand = require('./stats')
+const moodCommand = require('./mood')
 const buylootbox = require('./rarityLootbox')
 const checkBalance = require('./balance')
+const { postApi } = require('../utils/api')
 
 const commandMap = {
   '!sellall': sellAllCommand,
@@ -13,7 +20,13 @@ const commandMap = {
   '!inventory': inventoryCommand,
   '!slots': slotsCommand,
   '!help': helpCommand,
+  '!stats': statsCommand,
+  '!mood': moodCommand,
   '!glorpbox': askCommand,
+  '!asksafetytest': askSafetyTestCommand,
+  '!glorppipelinetest': glorpPipelineTestCommand,
+  '!glorpprompttest': glorpPromptTestCommand,
+  '!glorpcoretest': glorpCoreIdentityTestCommand,
   '!buylootbox': buylootbox,
   '!balance': checkBalance,
 }
@@ -38,14 +51,42 @@ async function handleCommand(client, channel, tags, message) {
 
     const handler = commandMap[command]
     if (handler) {
+      let didSucceed = true
+      let errorCode = null
+
       if (tags.username === 'slumpymr') {
         client.say(channel, `My liege, I bid thy command\u200B`)
       }
-      console.log(`[${command}] Request received from ${tags.username}`, {
-        params: extraParams,
-        message: message,
+      console.log(`[${command}] request`, {
+        user: tags.username,
+        channel: channel.startsWith('#') ? channel.slice(1) : channel,
+        paramCount: extraParams.length,
+        messageChars: String(message || '').length,
+        preview: String(message || '').slice(0, 80),
       })
-      await handler.execute(client, channel, tags, extraParams)
+
+      try {
+        await handler.execute(client, channel, tags, extraParams)
+      } catch (handlerErr) {
+        didSucceed = false
+        errorCode = handlerErr?.message || 'UNKNOWN_HANDLER_ERROR'
+        throw handlerErr
+      } finally {
+        const channelId = channel.startsWith('#') ? channel.slice(1) : channel
+        postApi('memory/event', {
+          username: tags.username,
+          userId: tags['user-id'] || tags.username,
+          channelId,
+          commandName: command,
+          success: didSucceed,
+          metadata: {
+            errorCode,
+            paramCount: extraParams.length,
+          },
+        }).catch((logErr) => {
+          console.warn('memory/event log failed:', logErr.message || logErr)
+        })
+      }
     }
   } catch (err) {
     console.log(err)
