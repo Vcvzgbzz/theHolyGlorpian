@@ -26,6 +26,11 @@ const appraiseCommand = require('./appraise')
 const eightballCommand = require('./eightball')
 const combineCommand = require('./combine')
 const glorpNewsCommand = require('./glorpnews')
+const questCommand = require('./quest')
+const heistCommand = require('./heist')
+const profileCommand = require('./profile')
+const marketCommand = require('./market')
+const blackMarketCommand = require('./blackmarket')
 const { postApi } = require('../utils/api')
 
 const STORY_ARC_POINTS_BY_COMMAND = {
@@ -38,6 +43,10 @@ const STORY_ARC_POINTS_BY_COMMAND = {
   '!gift': 1,
   '!combine': 2,
   '!appraise': 1,
+  '!quest': 2,
+  '!heist': 3,
+  '!market': 1,
+  '!blackmarket': 2,
 }
 
 const commandMap = {
@@ -69,6 +78,11 @@ const commandMap = {
   '!8ball': eightballCommand,
   '!combine': combineCommand,
   '!glorpnews': glorpNewsCommand,
+  '!quest': questCommand,
+  '!heist': heistCommand,
+  '!profile': profileCommand,
+  '!market': marketCommand,
+  '!blackmarket': blackMarketCommand,
 }
 
 function sanitizeCommand(input) {
