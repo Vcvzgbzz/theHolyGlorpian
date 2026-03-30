@@ -8,6 +8,13 @@ const ERROR_MESSAGES = {
 }
 
 function getErrorMessage(code, username) {
+  if (typeof code === 'string' && !(code in ERROR_MESSAGES)) {
+    const custom = code.replace(/^Error:\s*/, '').trim()
+    if (custom) {
+      return username ? `@${username}, ${custom}` : custom
+    }
+  }
+
   const base = ERROR_MESSAGES[code] || ERROR_MESSAGES.UNKNOWN
   return username ? `@${username}, ${base}` : base
 }

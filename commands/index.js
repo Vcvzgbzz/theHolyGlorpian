@@ -4,15 +4,41 @@ const inventoryCommand = require('./inventory')
 const slotsCommand = require('./slots')
 const helpCommand = require('./helpItems')
 const askCommand = require('./ask')
+const ahelpCommand = require('./ahelp')
 const askSafetyTestCommand = require('./askSafetyTest')
 const glorpPipelineTestCommand = require('./glorpPipelineTest')
 const glorpPromptTestCommand = require('./glorpPromptTest')
 const glorpCoreIdentityTestCommand = require('./glorpCoreIdentityTest')
+const jackpotInspectCommand = require('./jackpotinspect')
+const jackpotSeedCommand = require('./jackpotseed')
+const freeSpinTestCommand = require('./freespintest')
+const jackpotTestCommand = require('./jackpottest')
 const statsCommand = require('./stats')
 const moodCommand = require('./mood')
 const buylootbox = require('./rarityLootbox')
 const checkBalance = require('./balance')
+const giftCommand = require('./gift')
+const dailyCommand = require('./daily')
+const leaderboardCommand = require('./leaderboard')
+const flipCommand = require('./flip')
+const rollCommand = require('./roll')
+const appraiseCommand = require('./appraise')
+const eightballCommand = require('./eightball')
+const combineCommand = require('./combine')
+const glorpNewsCommand = require('./glorpnews')
 const { postApi } = require('../utils/api')
+
+const STORY_ARC_POINTS_BY_COMMAND = {
+  '!lootbox': 2,
+  '!buylootbox': 3,
+  '!slots': 2,
+  '!flip': 1,
+  '!roll': 2,
+  '!daily': 1,
+  '!gift': 1,
+  '!combine': 2,
+  '!appraise': 1,
+}
 
 const commandMap = {
   '!sellall': sellAllCommand,
@@ -20,15 +46,29 @@ const commandMap = {
   '!inventory': inventoryCommand,
   '!slots': slotsCommand,
   '!help': helpCommand,
+  '!ahelp': ahelpCommand,
   '!stats': statsCommand,
   '!mood': moodCommand,
   '!glorpbox': askCommand,
+  '!jackpotinspect': jackpotInspectCommand,
+  '!jackpotseed': jackpotSeedCommand,
+  '!freespintest': freeSpinTestCommand,
+  '!jackpottest': jackpotTestCommand,
   '!asksafetytest': askSafetyTestCommand,
   '!glorppipelinetest': glorpPipelineTestCommand,
   '!glorpprompttest': glorpPromptTestCommand,
   '!glorpcoretest': glorpCoreIdentityTestCommand,
   '!buylootbox': buylootbox,
   '!balance': checkBalance,
+  '!gift': giftCommand,
+  '!daily': dailyCommand,
+  '!leaderboard': leaderboardCommand,
+  '!flip': flipCommand,
+  '!roll': rollCommand,
+  '!appraise': appraiseCommand,
+  '!8ball': eightballCommand,
+  '!combine': combineCommand,
+  '!glorpnews': glorpNewsCommand,
 }
 
 function sanitizeCommand(input) {
@@ -86,6 +126,17 @@ async function handleCommand(client, channel, tags, message) {
         }).catch((logErr) => {
           console.warn('memory/event log failed:', logErr.message || logErr)
         })
+
+        const points = STORY_ARC_POINTS_BY_COMMAND[command]
+        if (didSucceed && points) {
+          postApi('memory/story-arc/progress', {
+            channelId,
+            eventType: command,
+            points,
+          }).catch((logErr) => {
+            console.warn('memory/story-arc/progress failed:', logErr.message || logErr)
+          })
+        }
       }
     }
   } catch (err) {

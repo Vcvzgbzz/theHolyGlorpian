@@ -5,15 +5,15 @@ module.exports = {
   execute: async (client, channel, tags, extraParams) => {
     try {
       const rarity = extraParams[0]?.param0
-      const capitalizedRarity = rarity
-        ? rarity.charAt(0).toUpperCase() + rarity.slice(1)
+      const normalizedRarity = rarity
+        ? rarity.charAt(0).toUpperCase() + rarity.slice(1).toLowerCase()
         : undefined
 
-      if (!capitalizedRarity) {
-        const text = await callApi(`sellAll}`, channel, tags)
+      if (!normalizedRarity) {
+        const text = await callApi('sellAll', channel, tags)
         client.say(channel, `@${tags.username}, ${text}\u200B`)
       } else {
-        const currentRariries = [
+        const currentRarities = [
           'Common',
           'Uncommon',
           'Rare',
@@ -22,16 +22,16 @@ module.exports = {
           'Mythic',
         ]
 
-        if (currentRariries.includes(capitalizedRarity)) {
+        if (currentRarities.includes(normalizedRarity)) {
           const text = await callApi(
-            `sellAll${capitalizedRarity}`,
+            `sellAll${normalizedRarity}`,
             channel,
             tags
           )
           client.say(channel, `@${tags.username}, ${text}\u200B`)
         } else {
-          console.log('Rarirty not found: ', capitalizedRarity)
-          client.say(channel, 'Unknown rarity: ' + capitalizedRarity)
+          console.log('Rarity not found: ', normalizedRarity)
+          client.say(channel, `@${tags.username}, unknown rarity: ${normalizedRarity}`)
         }
       }
     } catch (err) {

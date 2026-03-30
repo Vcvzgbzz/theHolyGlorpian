@@ -136,6 +136,51 @@ function getToneBand(temperament) {
   return 'loyal_hype'
 }
 
+function formatRecentChatContext(recentChat) {
+  const rows = Array.isArray(recentChat) ? recentChat : []
+  if (rows.length === 0) {
+    return {
+      lineCount: 0,
+      text: 'n/a',
+    }
+  }
+
+  const lines = rows.slice(-20).map((row) => {
+    const role = String(row?.speakerType || 'user').toLowerCase() === 'bot' ? 'bot' : 'user'
+    const name = String(row?.username || 'unknown').slice(0, 32)
+    const text = String(row?.text || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 200)
+
+    return `- [${role}] ${name}: ${text}`
+  })
+
+  return {
+    lineCount: lines.length,
+    text: lines.join('\n'),
+  }
+}
+
+function formatRecentEchoContext(recentEcho) {
+  if (!recentEcho || !recentEcho.text) {
+    return {
+      found: false,
+      text: 'n/a',
+    }
+  }
+
+  const text = String(recentEcho.text)
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 240)
+
+  return {
+    found: true,
+    text,
+  }
+}
+
 function buildAdaptiveToneContext(memoryProfile) {
   if (!memoryProfile) {
     return {
@@ -173,6 +218,12 @@ function buildAdaptiveToneContext(memoryProfile) {
   const channelTopThemes = Array.isArray(channelMood7d.topThemes)
     ? channelMood7d.topThemes.slice(0, 3).map((t) => t.theme).filter(Boolean)
     : []
+  const recentChat = Array.isArray(memoryProfile.recentChat) ? memoryProfile.recentChat : []
+  const recentChatMeta = memoryProfile.recentChatMeta || {}
+  const formattedRecentChat = formatRecentChatContext(recentChat)
+  const recentEcho = memoryProfile.recentEcho || null
+  const recentEchoMeta = memoryProfile.recentEchoMeta || {}
+  const formattedRecentEcho = formatRecentEchoContext(recentEcho)
   const sentimentTrend = Array.isArray(channelMood7d.sentimentTrend)
     ? channelMood7d.sentimentTrend.slice(-3)
     : []
@@ -208,6 +259,11 @@ function buildAdaptiveToneContext(memoryProfile) {
       blendedFeeling: Number(blendedAvgFeeling.toFixed(2)),
       channelSafetyRate7d: Number(channelSafetyRate7d.toFixed(3)),
       themes: channelTopThemes.length ? channelTopThemes.join(' | ') : 'n/a',
+      recentChatCount: recentChat.length,
+      recentChatUsed: formattedRecentChat.lineCount,
+      recentChatSource: String(recentChatMeta.source || 'n/a'),
+      recentEchoFound: formattedRecentEcho.found,
+      recentEchoSource: String(recentEchoMeta.source || 'n/a'),
     },
     context: `
   Persistent user memory profile (30d unless noted):
@@ -236,6 +292,17 @@ function buildAdaptiveToneContext(memoryProfile) {
   - blended_insult_rate: ${blendedInsultRate.toFixed(3)}
   - derived_temperament: ${temperament.toFixed(2)}/10
   - tone_band: ${toneBand}
+
+  Recent channel chat context (selected):
+  - context_source: ${String(recentChatMeta.source || 'n/a')}
+  - context_messages_available: ${recentChat.length}
+  - context_messages_used: ${formattedRecentChat.lineCount}
+${formattedRecentChat.text}
+
+  Memory echo context (if available):
+  - echo_source: ${String(recentEchoMeta.source || 'n/a')}
+  - echo_found: ${formattedRecentEcho.found ? 'yes' : 'no'}
+  - echo_text: ${formattedRecentEcho.text}
 
   Tone adaptation rules:
   - Let the channel mood influence style more than individual mood (60% channel / 40% user).

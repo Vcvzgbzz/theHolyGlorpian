@@ -1,5 +1,6 @@
 const fetch = require('node-fetch')
 require('dotenv').config({ quiet: true })
+const { isAdminUser } = require('./admins')
 
 const BASE_URL = process.env.BASE_URL
 const pendingRequests = new Map()
@@ -41,12 +42,13 @@ function updateLastRequest(userId) {
 
 async function callApi(endpoint, channel, tags, extraParams = []) {
   const userId = getUserId(tags)
+  const adminBypass = isAdminUser(String(tags.username || '').toLowerCase())
 
-  if (isRateLimited(userId)) {
+  if (!adminBypass && isRateLimited(userId)) {
     throw new Error('RATE_LIMITED')
   }
 
-  if (!canProceed(userId)) {
+  if (!adminBypass && !canProceed(userId)) {
     throw new Error('TOO_MANY_PENDING_REQUESTS')
   }
 
@@ -77,16 +79,25 @@ async function callApi(endpoint, channel, tags, extraParams = []) {
 
   try {
     const response = await fetch(url, { signal: controller.signal })
-    clearTimeout(timeout)
+    const text = await response.text()
 
     if (!response.ok) {
-      throw new Error(`Error Calling api: ${url} ${response.status}`)
+      let parsedMessage = ''
+      try {
+        const parsed = JSON.parse(text)
+        parsedMessage = parsed.error || parsed.message || ''
+      } catch {
+        parsedMessage = ''
+      }
+
+      throw new Error(parsedMessage || text || `API request failed (${response.status})`)
     }
 
-    return await response.text()
+    return text
   } catch (err) {
     throw err
   } finally {
+    clearTimeout(timeout)
     removePending(userId)
   }
 }
